@@ -15,31 +15,18 @@ import java.io.*;
 import java.security.*;
 import java.security.cert.*;
 
-public class KeplerRequest 
+public class KeplerRequest extends RequestImpl
   {
-  private URI uri;
-  private long lastCached;
-  private String language;
 
 /*===========================================================================
 
   constructor
 
 ===========================================================================*/
-  public KeplerRequest (URI uri, long last_cached, String language)
+  public KeplerRequest (URI uri, long last_cached, 
+      String language)
     {
-    this.uri = uri;
-    this.lastCached = last_cached;
-    this.language = language;
-    }
-
-/*===========================================================================
-
-  cleanUp 
-
-===========================================================================*/
-  public void cleanUp()
-    {
+    super (uri, last_cached, language);
     }
 
 /*===========================================================================
@@ -74,56 +61,18 @@ public class KeplerRequest
 
 /*===========================================================================
 
-  getLanguage
+  getInputStream
 
 ===========================================================================*/
-  public String getLanguage()
+  @Override
+  public InputStream getInputStream()
     {
-    return language;
-    }
-
-/*===========================================================================
-
-  getLastCached
-
-===========================================================================*/
-  public long getLastCached()
-    {
-    return lastCached;
-    }
-
-/*===========================================================================
-
-  getPath 
-
-===========================================================================*/
-  public String getPath()
-    {
-    return uri.getPath();
-    }
-
-/*===========================================================================
-
-  getUserData
-
-===========================================================================*/
-  public String getUserData()
-    {
+    String query = uri.getQuery();
+    if (query != null)
     // TODO -- this isn't going to work with Spartan-style file uploads
-    return uri.getQuery();
-    }
-
-/*===========================================================================
-
-  toString 
-
-===========================================================================*/
-  public String toString()
-    {
-    return 
-      "URI=" + uri
-      + " last_cached=" + lastCached
-      + " language=" + language;
+      return new ByteArrayInputStream (query.getBytes());
+    else
+      return null;
     }
 
   }

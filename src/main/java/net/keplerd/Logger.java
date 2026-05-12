@@ -110,6 +110,7 @@ public class Logger
   /** Log at a particular log level. */
   public void log (Class cls, int level, Exception e)
     {
+e.printStackTrace();
     log (cls.getName(), level, e.toString()); // TODO
     }
 

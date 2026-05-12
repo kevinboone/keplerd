@@ -10,17 +10,25 @@
 
 package net.keplerd;
 import java.util.*;
+import java.io.*;
 
 public class Config extends Properties 
   {
   private static Config instance = null;
-  private static String KEY_DOCROOT = "docroot";
-  private static String KEY_INDEX_FILE = "index_file";
-  private static String KEY_PLAINTEXT_PORT = "server.plaintext_port";
-  private static String KEY_TLS_PORT = "server.tls_port";
-  private static String KEY_KEYSTORE_FILENAME = "server.keystore_filename";
-  private static String KEY_KEYSTORE_PASSWORD = "server.keystore_password";
-  private static String KEY_ENABLE_TEST_PAGE = "server.enable_test_page";
+  private static String KEY_ENABLE_TEST_PAGE = "debug.enable_test_page";
+  private static String KEY_GROUPS_FILE = "security.roles_file";
+  private static String KEY_SECURITY_ENABLED = "security.enabled";
+  private static String KEY_SERVER = "server";
+  private static String KEY_SERVER_DOCROOT = "docroot";
+  private static String KEY_SERVER_KEYSTORE_FILE = "keystore_file";
+  private static String KEY_SERVER_KEYSTORE_PASSWORD = "keystore_password";
+  private static String KEY_SERVER_PORT = "port";
+  private static String KEY_SERVER_TYPE = "type";
+  private static String KEY_SERVER_INDEX_FILE = "index_file";
+
+  private Logger logger = Logger.getInstance();
+  private RolesFile rolesFile = null;
+  private String filename = Defaults.DEFLT_CONFIG_FILENAME;
 
   public static Config getInstance()
     {
@@ -40,72 +48,104 @@ public class Config extends Properties
     return false;
     }
 
+  public String getRolesFilename()
+    {
+    return getProperty (KEY_GROUPS_FILE, null); 
+    }
+
+  public String[] getRolesForIdent (String ident)
+    {
+    // Consider reloading this on each request, to make it
+    //   possible to change the config without restarting the
+    //   server. But this will be slower, of course.
+    if (rolesFile == null)
+      {
+      String rolesFilename = getRolesFilename();
+      if (rolesFilename != null)
+	{
+        try
+          {
+          rolesFile = RolesFile.fromFile (new File (getRolesFilename()));
+          }
+	catch (IOException e)
+	  {
+	  logger.log (getClass(), Logger.WARNING, 
+	    "Can't load roles file " + rolesFile);
+	  }
+	}
+      else
+	return new String[0];
+      }
+
+    if (rolesFile != null)
+      return rolesFile.getRolesForIdent (ident);
+    else
+      return new String[0];
+    }
+
   public boolean getEnableTestPage()
     {
     return getBooleanProperty 
       (KEY_ENABLE_TEST_PAGE, Defaults.DEFLT_ENABLE_TEST_PAGE);
     }
 
-  public String getDocroot()
+  public ServerConfig getServerConfig (int num) 
+       throws KeplerConfigException
     {
-    return getProperty (KEY_DOCROOT, null);
+    logger.in();
+    ServerConfig ret = null;
+    String typeKey = KEY_SERVER + num + "." + KEY_SERVER_TYPE;
+    String type = getProperty (typeKey);
+    if (type != null)
+      {
+      if (logger.isDebug())
+	logger.log (getClass(), Logger.DEBUG, 
+	  "Starting configuration of server " + num);
+
+      String docrootKey = KEY_SERVER + num + "." + KEY_SERVER_DOCROOT;
+      String docroot = getProperty (docrootKey);
+      if (docroot == null)
+        {
+        throw new KeplerConfigException ("Server " + num 
+          + ": no document root");
+        }
+
+      String keystoreFileKey = KEY_SERVER + num + "." + KEY_SERVER_KEYSTORE_FILE;
+      String keystoreFile = getProperty (keystoreFileKey);
+
+      String keystorePasswordKey = KEY_SERVER + num + "." + KEY_SERVER_KEYSTORE_PASSWORD;
+      String keystorePassword = getProperty (keystorePasswordKey);
+
+      String indexFileKey = KEY_SERVER + num + "." + KEY_SERVER_INDEX_FILE;
+      String indexFile = getProperty (indexFileKey);
+
+      int port = 0;
+      String portKey = KEY_SERVER + num + "." + KEY_SERVER_PORT;
+      String portS = getProperty (portKey);
+      if (portS != null)
+         port = Integer.parseInt (portS);
+
+      ret = new ServerConfig (type, docroot, port, keystoreFile, keystorePassword, indexFile);
+      }
+    logger.out();
+    return ret;
     }
 
-  public String getIndexFile()
+  public boolean getSecurityEnabled()
     {
-    return getProperty (KEY_INDEX_FILE, Defaults.DEFLT_INDEX_FILE);
+    return getBooleanProperty (KEY_SECURITY_ENABLED, false);
     }
 
-  public String getKeystoreFilename()
+  public void load() throws IOException
     {
-    return getProperty (KEY_KEYSTORE_FILENAME, null);
+    InputStream is = new FileInputStream (new File (filename));
+    load (is);
+    is.close();
     }
 
-  public String getKeystorePassword()
+  public void setFilename (String filename)
     {
-    return getProperty (KEY_KEYSTORE_PASSWORD, null);
-    }
-
-  public int getTlsPort()
-    {
-    return Integer.parseInt (getProperty (KEY_TLS_PORT, 
-      "" + Defaults.DEFLT_TLS_PORT));
-    }
-
-  public int getPlaintextPort()
-    {
-    return Integer.parseInt (getProperty (KEY_PLAINTEXT_PORT, 
-       "" + Defaults.DEFLT_PLAINTEXT_PORT));
-    }
-
-  public void setDocroot (String s)
-    {
-    setProperty (KEY_DOCROOT, s);
-    }
-
-  public void setIndexFile (String s)
-    {
-    setProperty (KEY_INDEX_FILE, s);
-    }
-
-  public void setKeystorePassword (String password)
-    {
-    setProperty (KEY_KEYSTORE_PASSWORD, password); 
-    }
-
-  public void setKeystoreFilename (String filename)
-    {
-    setProperty (KEY_KEYSTORE_FILENAME, filename); 
-    }
-
-  public void setTlsPort (int port)
-    {
-    setProperty (KEY_TLS_PORT, "" + port); 
-    }
-
-  public void setPlaintextPort (int port)
-    {
-    setProperty (KEY_PLAINTEXT_PORT, "" + port); 
+    this.filename = filename; 
     }
 
   }

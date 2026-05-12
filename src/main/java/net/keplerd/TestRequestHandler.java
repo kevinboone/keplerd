@@ -13,6 +13,7 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 import java.nio.charset.Charset;
+import net.gemlet.*; 
 
 public class TestRequestHandler extends KeplerHandler
   {
@@ -22,7 +23,7 @@ public class TestRequestHandler extends KeplerHandler
   private final String mime = "text/gemini;charset=" 
     + Charset.defaultCharset();
 
-  private String getIndex (KeplerRequest request, String userData)
+  private String getIndex (Request request, String userData)
     {
     StringBuffer sb = new StringBuffer();
     sb.append ("#Kepler features test page\n");
@@ -39,30 +40,46 @@ public class TestRequestHandler extends KeplerHandler
       sb.append ("Your last_cached time value is " + new Date(request.getLastCached()) + "\n");
     sb.append ("Your browser should not cache this page -- reload to ensure ");
     sb.append ("the date changes.\n");
-    sb.append ("Your language code is " + request.getLanguage() + "\n\n");
+    sb.append ("Your language code is " + request.getLanguage() + "\n");
+    sb.append ("Your identity is " + request.getUserIdent() + "\n\n");
     sb.append ("=> /test/prompt Click to get prompted to input something\n");
     return new String (sb); 
     }
 
   @Override
-  public KeplerResponse handle (KeplerRequest request, String ident)
+  public Response handle (Request request)
     {
     logger.in();
     String path = request.getPath();
-    KeplerResponse resp;
+    Response resp;
     if (path.equals ("/test/prompt"))
       {
-      String userData = request.getUserData();
-      if (userData == null)
-        resp = new InputExpectedResponse ("Please enter something");
-      else
-        resp = new StringSuccessResponse (getIndex (request, userData), mime);
+      try
+        {
+	InputStream is = request.getInputStream();
+        if (is != null)
+          {
+	  String userData = FileUtil.readInputStream (is);
+	  is.close();
+	  resp = new StringSuccessResponse (getIndex (request, userData), mime);
+          }
+        else
+	  resp = new GeminiInputExpectedResponse ("Please enter something");
+	}
+      catch (Exception e) 
+        {
+        resp = new GeminiPermFailResponse (e.toString());
+        }
       }
     else if (path.equals ("/test/"))
       resp = new StringSuccessResponse (getIndex (request, null), mime);
     else
-      resp = new NotFoundResponse (path);
+      resp = new GeminiNotFoundResponse (path);
+
     logger.out();
+    long now = System.currentTimeMillis() / 1000;
+    resp.setLastUpdated (now);
+    resp.setExpires (-1);
     return resp; 
     }
   }

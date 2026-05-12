@@ -14,6 +14,8 @@ import org.apache.commons.cli.*;
 
 public class Main 
   {
+  static final Logger logger = Logger.getInstance();
+
 /*===========================================================================
 
   main
@@ -25,40 +27,22 @@ public class Main
     {
     Config config = Config.getInstance();
 
-    Logger.getInstance().setLevel (Logger.ERROR); 
+    logger.setLevel (Logger.INFO); 
 
     Options options = new Options();
+
     Option docrootOption = new Option 
-      ("d", "docroot", true, "Set document root path");
+      ("c", "config-file", true, "Configuration file");
     options.addOption (docrootOption);
-    Option versionOption = new Option 
-      ("v", "version", false, "Show version");
-    options.addOption (versionOption);
     Option helpOption = new Option 
       ("h", "help", false, "Show help");
     options.addOption (helpOption);
     Option logLevelOption = new Option 
-      ("l", "log-level", true, "Log level 0-3 (0)");
+      ("l", "log-level", true, "Log level 0-3 (2)");
     options.addOption (logLevelOption);
-    Option indexFileOption = new Option 
-      ("i", "index-file", true, "Index file (index.gmi)");
-    options.addOption (indexFileOption);
-    Option plaintextPortOption = new Option 
-      ("p", "plaintext-port", true, 
-        "Plaintext port (" + Defaults.DEFLT_PLAINTEXT_PORT + ")");
-    options.addOption (plaintextPortOption);
-    Option tlsPortOption = new Option 
-      ("t", "tls-port", true, 
-        "TLS port (" + Defaults.DEFLT_TLS_PORT + ")");
-    options.addOption (tlsPortOption);
-    Option keystoreFilenameOption = new Option 
-      ("k", "keystore-file", true, 
-        "Keystore filename");
-    options.addOption (keystoreFilenameOption);
-    Option keystorePasswordOption = new Option 
-      ("w", "keystore-password", true, 
-        "Keystore password");
-    options.addOption (keystorePasswordOption);
+    Option versionOption = new Option 
+      ("v", "version", false, "Show version");
+    options.addOption (versionOption);
 
     CommandLineParser clparser = new DefaultParser();
     CommandLine cmd = null;
@@ -91,97 +75,32 @@ public class Main
         (cmd.getOptionValue ('l', "0"))); 
       }
 
-    if (cmd.hasOption("d"))
+    if (cmd.hasOption("c"))
       {
-      String s = cmd.getOptionValue ('d', null);
-      if (s != null)
-        config.setDocroot (s);
+      String s = cmd.getOptionValue ('c', null);
+      config.setFilename (s);
       }
 
-    if (cmd.hasOption("i"))
+    logger.log (Main.class, Logger.INFO, "Starting");
+    try
       {
-      String s = cmd.getOptionValue ('i', null);
-      if (s != null)
-        config.setIndexFile (s);
+      logger.log (Main.class, Logger.DEBUG, "Loading configuration");
+      config.load();
+      KeplerD kd = new KeplerD();
+      kd.configure(); 
+      // If we get here, we should be able to run, because the
+      //   configure steps succeeded. But it's impossible to
+      //   be absolutely certain, and we might still get
+      //   an exception. If we do, it's probably best that the whole
+      //   process shut down, rather than leaving some broken 
+      //   servers.
+      kd.start();
       }
-
-    String docroot = config.getDocroot();
-    if (docroot == null)
+    catch (Exception e)
       {
-      System.err.println ("No document root set; server cannot start");
-      System.exit (-1);
+      logger.log (Main.class, Logger.ERROR, e);
       }
-
-    File docrootFile = new File (docroot);
-    if (!docrootFile.isDirectory())
-      {
-      System.err.println ("Document root '" + docroot 
-        + "' is not a directory; server cannot start");
-      System.exit (-1);
-      }
-
-    if (cmd.hasOption ("p"))
-      {
-      String s = cmd.getOptionValue ('p', null);
-      if (s != null)
-	config.setPlaintextPort 
-	  (Integer.parseInt (s));
-      }
-
-    if (cmd.hasOption ("t"))
-      {
-      String s = cmd.getOptionValue ('t', null);
-      if (s != null)
-	config.setTlsPort 
-	  (Integer.parseInt (s));
-      }
-
-    int plaintextPort = config.getPlaintextPort(); 
-    int tlsPort = config.getTlsPort(); 
-    if (tlsPort <= 0 && plaintextPort <= 0)
-      {
-      System.err.println 
-        ("Both plaintext and TLS ports disabled; server cannot start");
-      System.exit (-1);
-      }
-   
-    if (tlsPort > 0)
-      {
-      if (cmd.hasOption ("k"))
-	{
-	String s = cmd.getOptionValue ('k', null);
-	if (s != null)
-	  config.setKeystoreFilename (s);
-	}
-
-      if (cmd.hasOption ("w"))
-	{
-	String s = cmd.getOptionValue ('w', null);
-	if (s != null)
-	  config.setKeystorePassword (s);
-	}
-
-      String keystorePassword = config.getKeystorePassword();
-      String keystoreFilename = config.getKeystoreFilename();
-
-      if (keystoreFilename == null || keystorePassword == null)
-        {
-        System.err.println 
-          ("TLS server cannot start without keystore filename and password");
-        System.exit (-1);
-        }
-
-      KeplerD kdt = new KeplerD (tlsPort, docrootFile); 
-      kdt.setKeystorePassword (keystorePassword);
-      kdt.setKeystoreFilename (keystoreFilename);
-      kdt.startTls();
-      }
-
-    if (plaintextPort > 0)
-      {
-      KeplerD kdp = new KeplerD (plaintextPort, docrootFile); 
-      kdp.startPlaintext();
-      }
+    // The server threads should be running now, so this one can finish
     }
 
 /*===========================================================================

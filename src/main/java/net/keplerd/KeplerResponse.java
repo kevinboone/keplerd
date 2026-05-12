@@ -11,11 +11,11 @@
 package net.keplerd;
 import java.net.*;
 import java.io.*;
+import net.gemlet.*; 
 
-public abstract class KeplerResponse 
+public abstract class KeplerResponse extends ResponseImpl 
   {
-  protected int code;
-
   public abstract void streamOut (OutputStream out) throws IOException;
   public void cleanUp() {}; // Default is to do nothing
   }
+

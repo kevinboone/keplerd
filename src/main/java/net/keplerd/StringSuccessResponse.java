@@ -32,8 +32,6 @@ public class StringSuccessResponse extends KeplerResponse
   public String makeLine ()
     {
     long length = string.length();
-    long lastUpdated = -1; 
-    long expires = -1; 
     String line = "20 " + length + " " + lastUpdated + " " + expires 
        + " " + mimeType + "\r\n"; 
     if (logger.isDebug())

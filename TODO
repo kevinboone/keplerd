@@ -1,6 +1,15 @@
-bind to specific interface
-access log
-error log not to stdout
+Allow `.kaccess` to specify some caching behaviour, for the Kepler protocol.
 
+Prevent users loading .kaccess
 
+Cache `.kaccess` files against their URLs, so they don't have to be reloaded on
+each request. This will have the downside of making it impossible to modify
+them without restarting the server.
+
+Make the listeners bind to specific network interfaces. At present, they bind
+to all available interfaces.
+
+Implement an access log
+
+Implement an error log, rather than just logging to stderr.
 
