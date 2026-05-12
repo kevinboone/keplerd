@@ -86,14 +86,14 @@ public class GeminiServer extends Server implements Runnable
   protected void handleClientConnection (Socket clientSocket, String userIdent)
     {
     OutputStream out = null;
+    InputStreamReader isr = null; 
+    BufferedReader in = null; 
     try 
-      (
-      BufferedReader in = new BufferedReader 
-            (new InputStreamReader (clientSocket.getInputStream()));
-      OutputStream out2 = clientSocket.getOutputStream();
-      )
       {
-      out = out2;
+      out = clientSocket.getOutputStream();
+      isr = new InputStreamReader (clientSocket.getInputStream());
+      in = new BufferedReader (isr);
+
       String requestLine = in.readLine();
       if (logger.isDebug())
         logger.log (getClass(), Logger.DEBUG, "request line = " + requestLine);
@@ -106,8 +106,6 @@ public class GeminiServer extends Server implements Runnable
       out.flush();
       req.cleanUp(); // In case something went wrong in streamOut()
       resp.cleanUp(); // In case something went wrong in streamOut()
-      out.close();
-      in.close();
       }
     catch (BadRequestException e)
       {
@@ -132,6 +130,12 @@ public class GeminiServer extends Server implements Runnable
       {
       logger.log (getClass(), Logger.WARNING, 
             "IOException while handling request: " + e );
+      }
+    finally
+      {
+      if (isr != null) try { isr.close(); } catch (Exception e){};
+      if (in != null) try { in.close(); } catch (Exception e){};
+      if (out != null) try { out.close(); } catch (Exception e){};
       }
     }
 

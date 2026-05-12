@@ -2,13 +2,13 @@
 
 **Work in progress**
 
-Version 0.1a, May 2026
+Version 0.1b, May 2026
 
 ## What is this?
 
-`keplerd` is a Java-based server for the Gemini protocol, and the draft  
+`keplerd` is a Java-based server for the Gemini, Spartan, and draft  
 [Kepler protocol](https://github.com/kevinboone/kepler-protocol) 
-(TLS-encrypted and plaintext), and it will be extended to support other "small
+(TLS-encrypted and plaintext); and it will be extended to support other "small
 net" protocols in due course. `keplerd` is mostly intended for Linux and
 similar platforms, but should work on any platform with a Java JVM less than
 about fifteen years old.
@@ -56,7 +56,7 @@ server1.keystore_password=changeit
 ```
 
 `server.type` can at present be `kepler` (plaintext) `keplers` (TLS),
-or `gemini` (TLS).
+`spartan`, or `gemini` (TLS).
 
 The `keystore_file` and `keystore_password` settings are only needed for
 encrypted servers.  There's a generic certificate in the `samples/` directory.
@@ -66,7 +66,8 @@ To generate a better (but still self-signed) one:
 
 Other settings that might be useful include `index_file` and `port`.
 If you don't specify port numbers, they default to 2009 for plaintext `kepler`,
-`10009` for `keplers`, and 1965 for Gemini. 
+`10009` for `keplers`, 1965 for Gemini, and 8300 for `spartan` (see 
+note below). 
 
 The `index_file` sets the name of the file to which the client gets redirected
 if it tries to read a directory. The default is `index.gmi`. So if the user
@@ -139,6 +140,9 @@ a heuristic (guesswork) way to estimate file expiry times. It sets the
 expiry to 10% of the current age of the file, that is, the time since 
 the file was last updated. 
 
+`keplerd` is single-threaded within each protocol. It's really not
+suitable for delivering streams, or even very large files.
+
 There is no process management -- `keplerd` expects the operating system to
 take care of lifecycle management. The only way to shut the server down is to
 send it an interrupt. 
@@ -149,4 +153,16 @@ There's no access log, and error log goes only to `stderr`.
 run in a "chroot jail" for security, which makes access to home 
 directories very awkward. Of course, specific users can be given 
 permissions in the document root.
+
+The conventional port number for Spartan is 300, but using this port requires
+`root` permissions on Linux. It would be a very brave administrator who ran a
+Java server as `root` these days: Java lacks a method to open a port as `root`
+and then drop permission, as C has. `keplerd` therefore uses port 8300 for
+Spartan by default but, if you're feeling brave, or reckless, you can change
+this in the configuration file.
+
+## Revisions
+
+0.2b May 2026  
+Preliminary Spartan support
 

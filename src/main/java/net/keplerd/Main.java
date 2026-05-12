@@ -99,6 +99,7 @@ public class Main
     catch (Exception e)
       {
       logger.log (Main.class, Logger.ERROR, e);
+      System.exit (-1);
       }
     // The server threads should be running now, so this one can finish
     }

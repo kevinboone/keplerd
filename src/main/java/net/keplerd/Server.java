@@ -38,6 +38,10 @@ public abstract class Server
       {
       ret = new GeminiServer (sc);
       }
+    else if (type.equals ("spartan"))
+      {
+      ret = new SpartanServer (sc);
+      }
     else
       throw new KeplerConfigException ("'" + type + 
         "' is not a valid server type");

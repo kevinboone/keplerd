@@ -61,7 +61,7 @@ public class TestRequestHandler extends KeplerHandler
           {
 	  String userData = FileUtil.readInputStream (is);
 	  is.close();
-	  resp = new StringSuccessResponse (getIndex (request, userData), mime);
+	  resp = new KeplerStringSuccessResponse (getIndex (request, userData), mime);
           }
         else
 	  resp = new GeminiInputExpectedResponse ("Please enter something");
@@ -72,7 +72,7 @@ public class TestRequestHandler extends KeplerHandler
         }
       }
     else if (path.equals ("/test/"))
-      resp = new StringSuccessResponse (getIndex (request, null), mime);
+      resp = new KeplerStringSuccessResponse (getIndex (request, null), mime);
     else
       resp = new GeminiNotFoundResponse (path);
 
