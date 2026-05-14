@@ -15,8 +15,6 @@ import java.util.*;
 
 public class RolesFile extends Properties
   {
-  private static Logger logger = Logger.getInstance();
-
   public static RolesFile fromFile (File file) throws IOException
     {
     RolesFile self = new RolesFile(); 

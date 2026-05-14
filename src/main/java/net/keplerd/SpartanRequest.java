@@ -10,23 +10,25 @@
 
 package net.keplerd;
 import java.net.*;
+import javax.net.ssl.*;
 import java.io.*;
+import java.security.*;
+import java.security.cert.*;
 
 public class SpartanRequest extends RequestImpl
   {
-  private int userDataLen;
-  private InputStream is;
+  protected String hostname;
 
 /*===========================================================================
 
   constructor
 
 ===========================================================================*/
-  public SpartanRequest (URI uri, int userDataLen, InputStream is)
+  public SpartanRequest (URI uri, String hostname, int userDataLen)
     {
     super (uri, 0, "?");
     this.userDataLen = userDataLen;
-    this.is = is;
+    this.hostname = hostname;
     }
 
 /*===========================================================================
@@ -34,19 +36,20 @@ public class SpartanRequest extends RequestImpl
   fromParse 
 
 ===========================================================================*/
-  public static SpartanRequest fromParse (String requestLine, InputStream is)
+  public static SpartanRequest fromParse (String requestLine)
       throws BadRequestException
     {
-    String[] args = requestLine.split (" ", 3);
+    String[] args = requestLine.split (" ");
     if (args.length != 3)
       {
       throw new BadRequestException ("Incorrect number of arguments");
       }
     try
       {
+      String hostname = args[0];
       URI uri = new URI (args[1]);
-      int userDataLen = Integer.parseInt (args[2]); 
-      return new SpartanRequest (uri, userDataLen, is);
+      int userDataLen = Integer.parseInt (args[2]);
+      return new SpartanRequest (uri, hostname, userDataLen);
       }
     catch (URISyntaxException e) 
       {
@@ -66,11 +69,52 @@ public class SpartanRequest extends RequestImpl
   @Override
   public InputStream getInputStream()
     {
-    if (userDataLen == 0)
-      return null;
-    else
-      return is;
+    return is;
     }
+
+/*===========================================================================
+
+  getPromptMethod
+
+===========================================================================*/
+  @Override
+  public int getPromptMethod()
+    {
+    return PROMPT_SPARTAN;
+    }
+
+/*===========================================================================
+
+  getUserDataLen
+
+===========================================================================*/
+  @Override
+  public int getUserDataLen()
+    {
+    return userDataLen;
+    }
+
+/*===========================================================================
+
+  hasCacheControl 
+
+===========================================================================*/
+  @Override
+  public boolean hasCacheControl()
+    {
+    return false;
+    }
+
+/*===========================================================================
+
+  setInputStream 
+
+===========================================================================*/
+  public void setInputStream (InputStream is)
+    {
+    this.is = is;
+    }
+
 
   }
 

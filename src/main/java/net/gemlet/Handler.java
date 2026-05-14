@@ -8,12 +8,17 @@
 
 ===========================================================================*/
 package net.gemlet;
+import java.io.IOException;
 
 /** This interface is implemented by anything that takes a Request
-    and returns a Response.
+    and generates a Response.
 */
 public interface Handler 
   {
-  public Response handle (Request request); 
+  /** Handle the response. This method should only throw an exception
+      if it can't actually write the response to the client. Most error
+      conditions should be reported to the client. 
+  */
+  public void handle (Request request, Response response) throws IOException; 
   }
 

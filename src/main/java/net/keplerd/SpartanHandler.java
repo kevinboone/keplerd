@@ -10,7 +10,6 @@
 
 package net.keplerd;
 import java.net.*;
-import javax.net.ssl.*;
 import java.io.*;
 import net.gemlet.*; 
 
@@ -20,25 +19,26 @@ public abstract class SpartanHandler implements Handler
   private static Config config = Config.getInstance();
   protected ServerConfig sc = null;
 
-  public static SpartanHandler getHandler (ServerConfig sc, SpartanRequest request)
+  public static Handler getHandler (ServerConfig sc, SpartanRequest request)
     {
     if (request.getPath().startsWith ("/test/") && config.getEnableTestPage())
       {
-      SpartanHandler h = new SpartanTestRequestHandler ();
-      h.sc = sc;
+      HandlerImpl h = new KeplerTestRequestHandler ();
+      h.setServerConfig (sc);
       return h;
       }
     else
       {
-      SpartanHandler h = new SpartanFileRequestHandler ();
+      HandlerImpl h = new KeplerFileRequestHandler ();
       if (sc.getIndexFile() == null) 
-        sc.setIndexFile ("index.gmi");
-      h.sc = sc;
+	  sc.setIndexFile ("index.gmi");
+      h.setServerConfig (sc);
       return h;
       }
     }
 
-  public abstract Response handle (Request request); 
+  public abstract void handle (Request request, Response response) 
+    throws IOException;
   }
 
 

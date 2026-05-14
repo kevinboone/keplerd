@@ -15,6 +15,7 @@ import javax.net.ssl.*;
 import java.io.*;
 import java.security.*;
 import java.security.cert.*;
+import org.tinylog.Logger;
 
 public class KeplersServer extends KeplerServer
   {
@@ -24,16 +25,16 @@ public class KeplersServer extends KeplerServer
   public KeplersServer (ServerConfig sc)
     {
     super (sc);
-    logger.in();
+    TraceLogger.in();
     if (sc.getPort() == 0)
       sc.setPort (DEFAULT_PORT);
-    logger.out();
+    TraceLogger.out();
     }
 
   @Override
   public void configure() throws KeplerConfigException
     {
-    logger.in();
+    TraceLogger.in();
     String keystoreFile = sc.getKeystoreFile();
     if (keystoreFile == null)
       throw new KeplerConfigException ("keplers server requires a keystore file");
@@ -75,31 +76,17 @@ public class KeplersServer extends KeplerServer
       {
       throw new KeplerConfigException ("Can't initialize server key manager", e);
       }
-    logger.out();
+    TraceLogger.out();
     }
 
   @Override
-  public void start() throws KeplerServerException
+  protected ServerSocket createServerSocket() throws IOException
     {
-    logger.in();
-
-    try 
-      {
-      SSLServerSocket serverSocketTLS = (SSLServerSocket)ssf.createServerSocket (sc.getPort());
-      serverSocketTLS.setWantClientAuth (true);
-      serverSocket = serverSocketTLS;
-      }
-    catch (IOException e)
-      {
-      throw new KeplerServerException ("Can't create server socket", e);
-      }
-    
-    Thread t = new Thread (this);
-    t.start();
-
-    logger.out();
+    Logger.info ("Listening on port " + sc.getPort() + " for Kepler TLS");
+    SSLServerSocket serverSocketTLS = (SSLServerSocket)ssf.createServerSocket (sc.getPort());
+    serverSocketTLS.setWantClientAuth (true);
+    return serverSocketTLS;
     }
-
 
   }
 

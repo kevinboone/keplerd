@@ -75,5 +75,43 @@ public class KeplerRequest extends RequestImpl
       return null;
     }
 
+/*===========================================================================
+
+  getPromptMethod
+
+===========================================================================*/
+  @Override
+  public int getPromptMethod()
+    {
+    return PROMPT_GEMINI;
+    }
+
+/*===========================================================================
+
+  getUserDataLen
+
+===========================================================================*/
+  @Override
+  public int getUserDataLen()
+    {
+    String query = uri.getQuery();
+    if (query != null)
+      return query.length();
+    else
+      return 0;
+    }
+
+/*===========================================================================
+
+  hasCacheControl 
+
+===========================================================================*/
+  @Override
+  public boolean hasCacheControl ()
+    {
+    return true;
+    }
+
+
   }
 

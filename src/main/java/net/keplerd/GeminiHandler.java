@@ -20,17 +20,19 @@ public abstract class GeminiHandler implements Handler
   private static Config config = Config.getInstance();
   protected ServerConfig sc = null;
 
-  public static GeminiHandler getHandler (ServerConfig sc, GeminiRequest request)
+  public static Handler getHandler (ServerConfig sc, GeminiRequest request)
     {
-    GeminiHandler h = new GeminiFileRequestHandler ();
+    TraceLogger.in();
+    HandlerImpl h = new KeplerFileRequestHandler ();
     if (sc.getIndexFile() == null) 
-      sc.setIndexFile ("index.gmi");
-    h.sc = sc;
+        sc.setIndexFile ("index.gmi");
+    h.setServerConfig (sc);
+    TraceLogger.out();
     return h;
     }
 
-  public abstract Response handle (Request request); 
- 
+  public abstract void handle (Request request, Response response) 
+    throws IOException;
   }
 
 

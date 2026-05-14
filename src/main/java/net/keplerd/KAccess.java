@@ -16,7 +16,6 @@ import java.util.*;
 public class KAccess extends Properties
   {
   private static Config config = Config.getInstance();
-  private static Logger logger = Logger.getInstance();
 
   private String allowedUsers[] = {};
   private String allowedRoles[] = {}; 

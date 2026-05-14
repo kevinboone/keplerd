@@ -9,17 +9,34 @@
 ===========================================================================*/
 
 package net.keplerd;
+import java.net.*;
+import java.io.*;
+import java.util.concurrent.*;
+import javax.net.ssl.*;
+import java.security.*;
+import java.security.cert.*;
+import net.gemlet.*; 
+import org.tinylog.*; 
 
-public abstract class Server 
+public abstract class Server implements Runnable
   {
-  ServerConfig sc;
+  protected ServerConfig sc;
+  protected ServerSocket serverSocket = null;
+  protected ClientConnectionHandler clientConnectionHandler = null; 
+  private ThreadPoolExecutor executor;
+  private static Config config = Config.getInstance();
 
   public Server (ServerConfig sc)
     {
     this.sc = sc;
+    executor = 
+      (ThreadPoolExecutor) Executors.newFixedThreadPool 
+        (sc.getThreadPoolSize()); 
     }
 
   public abstract void configure() throws KeplerConfigException;
+  protected abstract ServerSocket createServerSocket() throws IOException;
+  protected abstract Class getClientConnectionHandler();
 
   public static Server getFromConfig (ServerConfig sc)
       throws KeplerConfigException
@@ -48,6 +65,108 @@ public abstract class Server
     return ret;
     }
 
-  public abstract void start() throws KeplerServerException;
+  @Override 
+  public void run()
+    {
+    TraceLogger.in();
+
+    while (true)
+      {
+      try
+        { 
+        final Socket clientSocket = serverSocket.accept();
+        if (config.isDebug())
+          Logger.debug ("Client connected from " + 
+            clientSocket.getRemoteSocketAddress());
+        String ident = null;
+	if (clientSocket instanceof SSLSocket)
+	  {
+          SSLSession session = ((SSLSocket)clientSocket).getSession();
+          try
+            {
+            java.security.cert.Certificate[] certs = session.getPeerCertificates(); 
+            // certs[0], at least, should be present. But we might have to think
+            //   about this logic some more, if the client cert is _not_
+            //   self-signed, because certs[0] might not contain the identity
+            java.security.cert.Certificate cert = certs[0];   
+            if (cert instanceof X509Certificate)
+              {
+              try
+                {
+                byte[] der = cert.getEncoded();
+                MessageDigest md = MessageDigest.getInstance("SHA-1");
+                md.update(der);
+                byte[] digest = md.digest();
+                StringBuffer sb = new StringBuffer();
+                for (byte b : digest)
+                  {
+                  sb.append (String.format ("%02X", b)); 
+                  }
+                ident = new String (sb);
+                }
+              catch (Exception e)
+                {
+                }
+              }
+            }
+          catch (Exception e)
+            {
+            }
+	  }
+
+        final String userIdent = ident;
+ 
+        executor.submit (new Runnable()
+          {
+          public void run () 
+            {
+            try
+              {
+              clientConnectionHandler.handleClientConnection (sc, clientSocket, userIdent); 
+              }
+            catch (IOException e)
+              {
+              Logger.error (e);
+              }
+            };
+          }); 
+        }
+      catch (Exception e)
+        {
+        Logger.error (e);
+        }
+      }
+    }
+
+  public void start() throws KeplerServerException
+    {
+    TraceLogger.in();
+
+    try 
+      {
+      serverSocket  = createServerSocket();
+      Class cch = getClientConnectionHandler();
+      clientConnectionHandler = 
+        (ClientConnectionHandler)cch.newInstance();
+      }
+    catch (InstantiationException e)
+      {
+      throw new KeplerServerException ("Can't initialize", e);
+      }
+    catch (IllegalAccessException e)
+      {
+      throw new KeplerServerException ("Can't initialize", e);
+      }
+    catch (IOException e)
+      {
+      throw new KeplerServerException ("Can't create server socket", e);
+      }
+    
+    Thread t = new Thread (this);
+    t.start();
+
+    TraceLogger.out();
+    }
+
   }
 

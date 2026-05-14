@@ -66,11 +66,48 @@ public class GeminiRequest extends RequestImpl
     {
     String query = uri.getQuery();
     if (query != null)
-    // TODO -- this isn't going to work with Spartan-style file uploads
       return new ByteArrayInputStream (query.getBytes());
     else
       return null;
     }
+
+/*===========================================================================
+
+  getPromptMethod
+
+===========================================================================*/
+  @Override
+  public int getPromptMethod()
+    {
+    return PROMPT_GEMINI;
+    }
+
+/*===========================================================================
+
+  getUserDataLen
+
+===========================================================================*/
+  @Override
+  public int getUserDataLen()
+    {
+    String query = uri.getQuery();
+    if (query != null)
+      return query.length();
+    else
+      return 0;
+    }
+
+/*===========================================================================
+
+  hasCacheControl 
+
+===========================================================================*/
+  @Override
+  public boolean hasCacheControl ()
+    {
+    return false;
+    }
+
 
   }
 

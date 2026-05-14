@@ -11,6 +11,7 @@
 package net.keplerd;
 import java.net.*;
 import java.io.*;
+import org.tinylog.Logger;
 
 public class KeplerPlaintextServer extends KeplerServer 
   {
@@ -29,23 +30,10 @@ public class KeplerPlaintextServer extends KeplerServer
     }
 
   @Override
-  public void start() throws KeplerServerException
+  protected ServerSocket createServerSocket() throws IOException
     {
-    logger.in();
-
-    try 
-      {
-      serverSocket = new ServerSocket (sc.getPort());
-      }
-    catch (IOException e)
-      {
-      throw new KeplerServerException ("Can't create server socket", e);
-      }
-    
-    Thread t = new Thread (this);
-    t.start();
-
-    logger.out();
+    Logger.info ("Listening on port " + sc.getPort() + " for Kepler plaintext");
+    return new ServerSocket (sc.getPort());
     }
 
   }

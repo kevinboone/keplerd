@@ -14,30 +14,30 @@ import javax.net.ssl.*;
 import java.io.*;
 import net.gemlet.*; 
 
-public abstract class KeplerHandler implements Handler
+public abstract class KeplerHandler extends HandlerImpl
   {
   protected Server server = null;
   private static Config config = Config.getInstance();
-  protected ServerConfig sc = null;
 
-  public static KeplerHandler getHandler (ServerConfig sc, KeplerRequest request)
+  public static Handler getHandler (ServerConfig sc, KeplerRequest request)
     {
     if (request.getPath().startsWith ("/test/") && config.getEnableTestPage())
       {
-      KeplerHandler h = new TestRequestHandler ();
-      h.sc = sc;
+      HandlerImpl h = new KeplerTestRequestHandler ();
+      h.setServerConfig (sc);
       return h;
       }
     else
       {
-      KeplerHandler h = new KeplerFileRequestHandler ();
+      HandlerImpl h = new KeplerFileRequestHandler ();
       if (sc.getIndexFile() == null) 
         sc.setIndexFile ("index.gmi");
-      h.sc = sc;
+      h.setServerConfig (sc);
       return h;
       }
     }
 
-  public abstract Response handle (Request request);
+  public abstract void handle (Request request, Response response) 
+    throws IOException;
   }
 

@@ -23,6 +23,7 @@ public class ServerConfig
   private String keystorePassword = null;
   private int port = 0;
   private String type = null;
+  private int threadPoolSize = 5;
 
   public ServerConfig (String type, String docroot, int port, 
       String keystoreFile, String keystorePassword, String indexFile)
@@ -40,12 +41,14 @@ public class ServerConfig
   public String getKeystoreFile() { return keystoreFile; }
   public String getKeystorePassword() { return keystorePassword; }
   public int getPort() { return port; }
+  public int getThreadPoolSize() { return threadPoolSize; }
   public String getType() { return type; }
 
   public void setIndexFile (String f) { this.indexFile = f; }
   public void setKeystoreFile (String f) { this.keystoreFile = f; }
   public void setKeystorePassword (String w) { this.keystorePassword = w; }
   public void setPort (int p) { this.port = p; }
+  public void setThreadPoolSize (int p) { this.threadPoolSize = p; }
 
   public String toString()
     {

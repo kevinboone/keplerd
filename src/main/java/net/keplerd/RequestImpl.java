@@ -15,10 +15,13 @@ import net.gemlet.*;
 
 public abstract class RequestImpl implements Request 
   {
-  protected URI uri;
+  protected InputStream is = null;
+  protected int userDataLen = 0;
   protected long lastCached;
   protected String language;
   protected String userIdent = null;
+  protected String remoteAddr = null;
+  protected URI uri;
 
 /*===========================================================================
 
@@ -38,8 +41,9 @@ public abstract class RequestImpl implements Request
   cleanUp 
 
 ===========================================================================*/
-  public void cleanUp()
+  public void cleanUp() throws IOException
     {
+    if (is != null) is.close();
     }
 
 /*===========================================================================
@@ -84,6 +88,26 @@ public abstract class RequestImpl implements Request
 
 /*===========================================================================
 
+  getRemoteAddr
+
+===========================================================================*/
+  public String getRemoteAddr()
+    {
+    return remoteAddr; 
+    }
+
+/*===========================================================================
+
+  setRemoteAddr
+
+===========================================================================*/
+  public void setRemoteAddr (String ra)
+    {
+    this.remoteAddr = ra;
+    }
+
+/*===========================================================================
+
   setUserIdent
 
 ===========================================================================*/
@@ -103,7 +127,8 @@ public abstract class RequestImpl implements Request
       "URI=" + uri
       + " last_cached=" + lastCached
       + " language=" + language
-      + " ident=" + userIdent;
+      + " ident=" + userIdent
+      + " address=" + remoteAddr;
     }
 
   }

@@ -18,7 +18,6 @@ import java.security.cert.*;
 
 public class KeplerD 
   {
-  private Logger logger = Logger.getInstance();
   private Config config = Config.getInstance();
   private Vector<Server> servers = new Vector<Server>();
 
@@ -38,7 +37,7 @@ public class KeplerD
 ===========================================================================*/
   public void configure() throws KeplerConfigException
     {
-    logger.in();
+    TraceLogger.in();
     int serverNum = 0;
     ServerConfig sc = config.getServerConfig (serverNum); 
     if (sc != null) do
@@ -54,7 +53,7 @@ public class KeplerD
     if (servers.size() == 0)
       throw new KeplerConfigException ("No servers were configured");
 
-    logger.out();
+    TraceLogger.out();
     }
 
 /*===========================================================================
@@ -64,12 +63,12 @@ public class KeplerD
 ===========================================================================*/
   public void start() throws KeplerServerException
     {
-    logger.in();
+    TraceLogger.in();
     for (Server server : servers)
       {
       server.start();
       }
-    logger.out();
+    TraceLogger.out();
     }
 
   }

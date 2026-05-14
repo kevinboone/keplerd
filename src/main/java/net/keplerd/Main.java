@@ -11,10 +11,10 @@
 package net.keplerd;
 import java.io.*;
 import org.apache.commons.cli.*;
+import org.tinylog.Logger;
 
 public class Main 
   {
-  static final Logger logger = Logger.getInstance();
 
 /*===========================================================================
 
@@ -27,7 +27,7 @@ public class Main
     {
     Config config = Config.getInstance();
 
-    logger.setLevel (Logger.INFO); 
+    System.setProperty ("tinylog.writerError.level", "info"); 
 
     Options options = new Options();
 
@@ -38,7 +38,7 @@ public class Main
       ("h", "help", false, "Show help");
     options.addOption (helpOption);
     Option logLevelOption = new Option 
-      ("l", "log-level", true, "Log level 0-3 (2)");
+      ("l", "log-level", true, "Log level: error, warn, info, debug, trace (info)");
     options.addOption (logLevelOption);
     Option versionOption = new Option 
       ("v", "version", false, "Show version");
@@ -69,24 +69,68 @@ public class Main
       System.exit (0);
       }
 
-    if (cmd.hasOption("l"))
-      {
-      Logger.getInstance().setLevel (Integer.parseInt 
-        (cmd.getOptionValue ('l', "0"))); 
-      }
-
     if (cmd.hasOption("c"))
       {
       String s = cmd.getOptionValue ('c', null);
       config.setFilename (s);
       }
 
-    logger.log (Main.class, Logger.INFO, "Starting");
+    // We can't log _anything_ at any level before setting the tinylog
+    //   system properties, as logging anything freezes the configuration.
+    // So config.load(), in particular, must not log.
+    // In any even, we can call config.load() any time after handling "-c", 
+    //   but before handling "-l", wich has to take precedence.
+    config.load();
+    String logLevel = config.getLogLevel(); 
+    if (logLevel.equals ("debug") || logLevel.equals ("trace"))
+      config.setIsDebug (true);
+    System.setProperty ("tinylog.writerError.level", logLevel); 
+
+    if (cmd.hasOption("l"))
+      {
+      String level = cmd.getOptionValue ('l', "info"); 
+      if (level.equals ("debug") || level.equals ("trace"))
+        config.setIsDebug (true);
+      System.setProperty ("tinylog.writerError.level", level); 
+      }
+
     try
       {
-      logger.log (Main.class, Logger.DEBUG, "Loading configuration");
-      config.load();
+      String errorLog = config.getErrorLog();
+      if (errorLog == null)
+        {
+        System.setProperty ("tinylog.writerError.level", "off"); 
+        System.setProperty ("tinylog.writerError", "console"); 
+        }
+      else
+        System.setProperty ("tinylog.writerError.file", errorLog); 
+
+      String accessLog = config.getAccessLog();
+      if (accessLog == null)
+        {
+        System.setProperty ("tinylog.writerAccess.level", "off"); 
+        System.setProperty ("tinylog.writerAccess", "console"); 
+        }
+      else
+        System.setProperty ("tinylog.writerAccess.file", accessLog); 
+
+      boolean logsUnbuffered = config.getLoggingUnbuffered();
+      if (logsUnbuffered)
+        {
+        System.setProperty ("tinylog.writerError.buffered", "false"); 
+        System.setProperty ("tinylog.writerAccess.buffered", "false"); 
+        }
+
+      Logger.info (Version.APP_NAME + " " + "Version " 
+        + Version.VERSION + " starting");
       KeplerD kd = new KeplerD();
+
+      if (logsUnbuffered)
+        {
+        Logger.warn (Version.APP_NAME + " is running with unbuffered logs"); 
+        }
+
+      Logger.debug ("Configuring servers");
       kd.configure(); 
       // If we get here, we should be able to run, because the
       //   configure steps succeeded. But it's impossible to
@@ -98,7 +142,7 @@ public class Main
       }
     catch (Exception e)
       {
-      logger.log (Main.class, Logger.ERROR, e);
+      Logger.error (e);
       System.exit (-1);
       }
     // The server threads should be running now, so this one can finish
