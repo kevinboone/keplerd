@@ -1,3 +1,5 @@
+gemlet init()
+
 Make provision for custom MIME/filename mappings
 
 Allow `.kaccess` to specify some caching behaviour, for the Kepler protocol.

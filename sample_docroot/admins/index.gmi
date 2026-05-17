@@ -1,0 +1,6 @@
+# Admins index
+
+You should only be able to download this page if your client
+certificate fingerprint is listed in roles.properties as being
+in the 'admins' role.
+

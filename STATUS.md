@@ -12,19 +12,22 @@ image formats
 * It restricts parts of the filesystem according to client certificate
 * It rejects at least some hostile client actions
 
+The extension interface is defined, and bears some resemblance to the
+Java servlets API. There are a couple of sample applications.
+
 ## What is still to be done 
 
 * There needs to be much more vigorous testing, particularly of aberrant
-or hostile clients. In particular, we need to be sure that clients
-can't get documents that are restricted by access control policies.
-
-* The long-term plan is for `keplerd` to be extensible in Java, the 
-way the Tomcat web server works. This means defining an API,
-and a way to specify which external code (however it is supplied)
-maps to particular URL patterns.
+or hostile clients. In particular, we need to be sure that clients can't get
+documents that are restricted by access control policies.
 
 * There's no support for virtual hosting. We need a way to map 
-hostnames to docroots, rather than specifying a single 
-docroot for each protocol.
+hostnames to docroots, rather than specifying a single docroot for each
+protocol.
+
+## Things that might be done
+
+It would be easy to extend keplerd to support other protocols, like nex and
+Gopher. 
 
 

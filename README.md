@@ -2,37 +2,47 @@
 
 **Work in progress**
 
-Version 0.2c, May 2026
+Version 0.2d, May 2026
 
 ## What is this?
 
 `keplerd` is a Java-based server for the "small-net" protocols Gemini, Spartan, 
-and the draft  [Kepler
-protocol](https://github.com/kevinboone/kepler-protocol) (TLS-encrypted and
-plaintext). It might be extended to support other protocols in due
-course. `keplerd` is mostly intended for Linux and similar platforms, but
-should work on any operating system with a Java JVM less than about fifteen
+and the draft  
+[Kepler protocol](https://github.com/kevinboone/kepler-protocol) 
+(TLS-encrypted and plaintext). It might be extended to support other protocols
+in due course. `keplerd` is mostly intended for Linux and similar platforms,
+but should work on any operating system with a Java JVM less than about fifteen
 years old.
 
 `keplerd` can host any combination of the supported protocols, including
-multiple instances with different certificates and document roots. It is
-multi-threaded, so should handle situations where, for example, clients are
-slow to download, or files are large.
+multiple instances of the same protocol with different certificates and
+document roots. It is multi-threaded, so should handle situations where, for
+example, clients are slow to download, or files are large.
 
 This application is, at present, at the proof-of-concept stage, and lacks many
 features that a production server will need. However, it's basically functional.
+
+`keplerd` can be extended in Java, using the "gemlet" API that should be
+familiar to anybody who has used the Java servlets API. There is a separate
+[extending keplerd document](sample_docroot/extending_keplerd.md) 
+that goes into more detail about the gemlet API.
 
 ## Running keplerd
 
 Obtain the Java JAR file from the `binaries/` directory, and run it like
 this:
 
-    java -jar keplerd-0.1.jar -c my_configuration_file.properties
+    java -jar keplerd-0.2.jar -c my_configuration_file.properties
 
 In a real, Internet-facing application, you'd want to run it in a container or,
 at least, in a "chroot jail" because it hasn't had a lot of security hardening. 
 For more information, see 
 [this article on running Java applications in a chroot jail](https://kevinboone.me/java_chroot.html).
+
+If you have the source code bundle, and you're using Linux, you can start 
+`keplerd` with a workable configuration by running the script `run.sh`. This
+isn't a recommended way to run it in production, and it won't user a server
+certificate that matches the hostname.
 
 ## Configuration
 
@@ -143,6 +153,24 @@ logging.unbuffered=true
 
 This isn't recommended in any system that carries substantial load.
 
+### Extension configuration
+
+Extensions are provided in the form of Java JAR files, each of which must be
+a complete, self-contained bundle, with access only to the classes of the
+gemlet API.
+
+Extensions are numbered starting at zero; each requires a context root
+(the first part of the path) and a JAR file. For example:
+
+```
+extension0.jar=file:binaries/cal-0.2.jar
+extension0.context_root=/cal
+```
+
+For more information, see
+[extending keplerd document](sample_docroot/extending_keplerd.md).
+
+
 ## Access control
 
 Access control is disabled by default -- any client can access any URL. To
@@ -249,6 +277,10 @@ Their licence terms are documented in the `licences/` directory of the
 source code bundle.
 
 ## Revisions
+
+0.2d May 2026
+* 'gemlet' API drafted, along with a sample 'calendar' application 
+  that runs as an extension to `keplerd`
 
 0.2c May 2026
 * Thread-pool support

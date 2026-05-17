@@ -1,0 +1,7 @@
+# Welcome to keplerd
+
+keplerd is a server for Gemini, Spartan, and the draft Kepler specification.
+
+=> extending_keplerd.md Extending keplerd in Java (Markdown)
+=> tech_notes.md Technical notes (Markdown)
+
